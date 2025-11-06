@@ -65,9 +65,9 @@ export function ApplePay({ onSuccess, onBack, language, totalAmount }: ApplePayP
   const t = text[language];
 
   return (
-    <div className="h-full flex flex-col bg-[#F7F9FB]">
+    <div className="min-h-screen flex flex-col bg-[#F7F9FB]">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
+      <div className="px-6 pt-8 pb-4 flex-shrink-0">
         <button 
           onClick={onBack}
           className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-95 transition-transform"
@@ -78,7 +78,7 @@ export function ApplePay({ onSuccess, onBack, language, totalAmount }: ApplePayP
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 overflow-y-auto">
         {!showSheet ? (
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -100,14 +100,14 @@ export function ApplePay({ onSuccess, onBack, language, totalAmount }: ApplePayP
             {/* Apple Pay Sheet */}
             <Card className="bg-white border-0 shadow-2xl rounded-3xl overflow-hidden">
               {/* Header */}
-              <div className="bg-black text-white p-6 text-center">
-                <Smartphone className="w-12 h-12 mx-auto mb-2" />
+              <div className="bg-black text-white p-5 text-center">
+                <Smartphone className="w-10 h-10 mx-auto mb-2" />
                 <h2 className="text-xl">{t.title}</h2>
                 <p className="text-sm text-white/70 mt-1">{t.subtitle}</p>
               </div>
 
               {/* Payment Details */}
-              <div className="p-6 space-y-4">
+              <div className="p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">{t.merchant}</span>
                   <span className="text-slate-900">{t.merchant}</span>
@@ -131,7 +131,7 @@ export function ApplePay({ onSuccess, onBack, language, totalAmount }: ApplePayP
                 <Button
                   onClick={handleApplePay}
                   disabled={isProcessing}
-                  className="w-full h-14 bg-black hover:bg-slate-800 text-white rounded-xl mt-6 relative overflow-hidden"
+                  className="w-full h-14 bg-black hover:bg-slate-800 text-white rounded-xl mt-4 relative overflow-hidden"
                 >
                   {isProcessing ? (
                     <motion.div
@@ -154,7 +154,7 @@ export function ApplePay({ onSuccess, onBack, language, totalAmount }: ApplePayP
                   )}
                 </Button>
 
-                <p className="text-xs text-center text-slate-400 mt-4">
+                <p className="text-xs text-center text-slate-400 mt-3">
                   {t.secured}
                 </p>
               </div>

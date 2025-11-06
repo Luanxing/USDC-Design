@@ -110,9 +110,9 @@ export function CreditCard({ onSuccess, onBack, language, totalAmount }: CreditC
   const t = text[language];
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-slate-900 to-slate-800">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-900 to-slate-800">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
+      <div className="px-6 pt-8 pb-4 flex-shrink-0">
         <button 
           onClick={onBack}
           className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform mb-4"
@@ -125,7 +125,7 @@ export function CreditCard({ onSuccess, onBack, language, totalAmount }: CreditC
       </div>
 
       {/* Cards Stack */}
-      <div className="flex-1 relative px-6 overflow-hidden">
+      <div className="flex-1 relative px-6 overflow-y-auto pb-6">
         <div className="relative h-full">
           <AnimatePresence>
             {cards.map((card, index) => {
@@ -222,11 +222,11 @@ export function CreditCard({ onSuccess, onBack, language, totalAmount }: CreditC
       </div>
 
       {/* Bottom Action */}
-      <div className="px-6 pb-8 pt-4">
+      <div className="px-6 pb-6 pt-4 flex-shrink-0">
         <Button
           onClick={handlePay}
           disabled={!selectedCard || isProcessing}
-          className="w-full h-16 rounded-2xl bg-[#00C2A8] hover:bg-[#00A890] text-white shadow-lg shadow-[#00C2A8]/30 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-14 rounded-2xl bg-[#00C2A8] hover:bg-[#00A890] text-white shadow-lg shadow-[#00C2A8]/30 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isProcessing ? (
             <motion.div

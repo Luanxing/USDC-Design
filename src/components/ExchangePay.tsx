@@ -95,9 +95,9 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
   const t = text[language];
 
   return (
-    <div className="h-full flex flex-col bg-[#F7F9FB]">
+    <div className="min-h-screen flex flex-col bg-[#F7F9FB]">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
+      <div className="px-6 pt-8 pb-4 flex-shrink-0">
         <button 
           onClick={onBack}
           className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-95 transition-transform"
@@ -107,7 +107,7 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 overflow-y-auto">
         {/* Rotating Exchange Icon */}
         <motion.div
           animate={{ rotate: 360 }}
@@ -171,10 +171,10 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm mt-8"
+            className="w-full max-w-sm mt-6"
           >
-            <div className="bg-white rounded-2xl shadow-xl p-6 border border-slate-100">
-              <p className="text-slate-700 mb-6 text-center">{t.didntOpen}</p>
+            <div className="bg-white rounded-2xl shadow-xl p-5 border border-slate-100">
+              <p className="text-slate-700 mb-5 text-center">{t.didntOpen}</p>
               
               <div className="space-y-3">
                 <Button 

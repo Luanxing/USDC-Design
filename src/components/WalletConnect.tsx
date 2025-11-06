@@ -92,9 +92,9 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#F7F9FB]">
+    <div className="min-h-screen flex flex-col bg-[#F7F9FB]">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
+      <div className="px-6 pt-8 pb-4 flex-shrink-0">
         <button 
           onClick={onBack}
           className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-95 transition-transform"
@@ -104,7 +104,7 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-6 overflow-y-auto pb-6">
+      <div className="flex-1 px-6 overflow-y-auto pb-8">
         {!showTransaction ? (
           <motion.div
             initial={{ opacity: 0 }}
@@ -156,15 +156,15 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-4">
                 <h1 className="text-2xl text-slate-900">{t.transactionTitle}</h1>
                 <Badge className="bg-green-100 text-green-700 border-0">
                   {t.lowFee}
                 </Badge>
               </div>
 
-              <Card className="bg-white border-0 shadow-lg rounded-2xl p-6 mb-6">
-                <div className="space-y-4">
+              <Card className="bg-white border-0 shadow-lg rounded-2xl p-5 mb-4">
+                <div className="space-y-3">
                   {/* To */}
                   <div>
                     <p className="text-sm text-slate-500 mb-1">{t.to}</p>
@@ -172,26 +172,26 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
                   </div>
 
                   {/* Amount */}
-                  <div className="pt-4 border-t border-slate-100">
+                  <div className="pt-3 border-t border-slate-100">
                     <p className="text-sm text-slate-500 mb-1">{t.amount}</p>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-3xl text-slate-900">
+                      <span className="text-2xl text-slate-900">
                         {currency === 'USDC' ? `${cryptoAmount} USDC` : `¥${cryptoAmount} JPYC`}
                       </span>
                       {currency === 'USDC' && (
-                        <span className="text-slate-400">≈ ¥{totalAmount.toLocaleString()}</span>
+                        <span className="text-sm text-slate-400">≈ ¥{totalAmount.toLocaleString()}</span>
                       )}
                     </div>
                   </div>
 
                   {/* Network Fee */}
-                  <div className="pt-4 border-t border-slate-100">
+                  <div className="pt-3 border-t border-slate-100">
                     <p className="text-sm text-slate-500 mb-1">{t.networkFee}</p>
                     <p className="text-slate-900">{gasFee} gas</p>
                   </div>
 
                   {/* Payment ID */}
-                  <div className="pt-4 border-t border-slate-100">
+                  <div className="pt-3 border-t border-slate-100">
                     <p className="text-sm text-slate-500 mb-1">{t.paymentId}</p>
                     <div className="flex items-center gap-2">
                       <code className="text-sm text-slate-900 bg-slate-100 px-3 py-1 rounded-lg">
@@ -205,7 +205,7 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
 
               <Button 
                 onClick={onConfirm}
-                className="w-full h-14 rounded-2xl bg-[#00C2A8] hover:bg-[#00A890] text-white shadow-lg shadow-[#00C2A8]/30 active:scale-95 transition-transform mb-4"
+                className="w-full h-14 rounded-2xl bg-[#00C2A8] hover:bg-[#00A890] text-white shadow-lg shadow-[#00C2A8]/30 active:scale-95 transition-transform mb-3"
               >
                 {t.confirm}
               </Button>

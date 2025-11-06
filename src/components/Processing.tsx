@@ -83,7 +83,7 @@ export function Processing({ onSuccess, onFailed, language, currency, network, y
   ];
 
   return (
-    <div className="h-full flex flex-col bg-[#F7F9FB] items-center justify-center px-6">
+    <div className="min-h-screen flex flex-col bg-[#F7F9FB] items-center justify-center px-6 py-8">
       {/* Rotating Crypto Coin */}
       <motion.div
         animate={{ 
@@ -94,13 +94,13 @@ export function Processing({ onSuccess, onFailed, language, currency, network, y
           rotate: { duration: 3, repeat: Infinity, ease: "linear" },
           scale: { duration: 2, repeat: Infinity }
         }}
-        className="mb-8 relative"
+        className="mb-6 relative"
       >
-        <div className={`w-32 h-32 rounded-full bg-gradient-to-br ${
+        <div className={`w-28 h-28 rounded-full bg-gradient-to-br ${
           currency === 'USDC' ? 'from-[#00C2A8] to-[#00A890]' : 'from-green-500 to-green-600'
         } flex items-center justify-center shadow-2xl`}>
-          <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center">
-            <span className="text-4xl">{coinSymbol}</span>
+          <div className="w-20 h-20 rounded-full bg-white/90 flex items-center justify-center">
+            <span className="text-3xl">{coinSymbol}</span>
           </div>
         </div>
         
@@ -118,10 +118,10 @@ export function Processing({ onSuccess, onFailed, language, currency, network, y
       </motion.div>
 
       <h2 className="text-2xl text-slate-900 mb-2">{t.title}</h2>
-      <p className="text-slate-500 mb-12">{t.subtitle}</p>
+      <p className="text-slate-500 mb-8">{t.subtitle}</p>
 
       {/* Progress Timeline */}
-      <div className="w-full max-w-xs mb-12">
+      <div className="w-full max-w-xs mb-8">
         <div className="flex items-center justify-between relative">
           {/* Progress Line */}
           <div className="absolute top-4 left-0 w-full h-0.5 bg-slate-200">

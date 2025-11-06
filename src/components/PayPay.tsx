@@ -52,9 +52,9 @@ export function PayPay({ onSuccess, onBack, language }: PayPayProps) {
   const t = text[language];
 
   return (
-    <div className="h-full flex flex-col bg-[#F7F9FB]">
+    <div className="min-h-screen flex flex-col bg-[#F7F9FB]">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
+      <div className="px-6 pt-8 pb-4 flex-shrink-0">
         <button 
           onClick={onBack}
           className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-95 transition-transform"
@@ -64,7 +64,7 @@ export function PayPay({ onSuccess, onBack, language }: PayPayProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 overflow-y-auto">
         {/* Rotating PayPay Icon */}
         <motion.div
           animate={{ rotate: 360 }}
