@@ -161,9 +161,11 @@ export default function App() {
           <ExchangePay
             exchangeName={selectedExchange}
             merchantId={merchantIds[selectedExchange]}
-            onSuccess={() => navigateTo('processing')}
+            onSuccess={() => navigateTo('success')}
             onBack={() => navigateTo('payment-hub')}
             language={language}
+            totalAmount={totalAmount}
+            cart={cart}
           />
         )}
 

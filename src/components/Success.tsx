@@ -4,6 +4,7 @@ import { Copy, ExternalLink, FileText, MapPin, Clock } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Separator } from './ui/separator';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import type { Currency, PaymentChannel, YenPaymentMethod, CartItem } from '../types/order';
 
 interface SuccessProps {
@@ -223,187 +224,107 @@ export function Success({ language, onNewPayment, currency, paymentChannel, yenM
           <p className="text-sm text-slate-400">{t.paid}</p>
         </motion.div>
 
-        {/* Conditional Details - Crypto or Yen */}
-        {isCryptoPayment ? (
-          /* Crypto Transaction Details */
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="w-full space-y-3 mb-6"
-          >
-            {/* From Address */}
-            <Card className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-xs text-slate-500 mb-1">{t.from}</p>
-                  <p className="text-sm text-slate-900 font-mono">{truncateAddress(fromAddress)}</p>
+        {/* Order Receipt Details - Now for ALL payment methods */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="w-full space-y-4 mb-6"
+        >
+          {/* Store & Payment Info */}
+          <Card className="bg-white border border-slate-200 rounded-2xl p-5">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-[#00C2A8] mt-0.5" />
+                <div>
+                  <p className="text-sm text-slate-900">{t.storeName}</p>
+                  <p className="text-xs text-slate-500">{t.storeLocation}</p>
                 </div>
-                <button
-                  onClick={() => handleCopy(fromAddress, 'from')}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
-                >
-                  <Copy className="w-4 h-4 text-slate-400" />
-                </button>
               </div>
-              {copiedField === 'from' && (
-                <motion.p
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-xs text-[#00C2A8] mt-1"
-                >
-                  {t.copied}
-                </motion.p>
-              )}
-            </Card>
+              <Separator />
+              <div className="flex items-start gap-3">
+                <Clock className="w-5 h-5 text-[#00C2A8] mt-0.5" />
+                <div>
+                  <p className="text-xs text-slate-500">{t.paymentTime}</p>
+                  <p className="text-sm text-slate-900">{currentTime}</p>
+                </div>
+              </div>
+              <Separator />
+              <div className="flex items-start gap-3">
+                <FileText className="w-5 h-5 text-[#00C2A8] mt-0.5" />
+                <div>
+                  <p className="text-xs text-slate-500">{t.paymentMethod}</p>
+                  <p className="text-sm text-slate-900">{paymentMethodName}</p>
+                  {isCryptoPayment && (
+                    <p className="text-xs text-[#00C2A8] mt-1">{paidText}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
 
-            {/* To Address */}
-            <Card className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-xs text-slate-500 mb-1">{t.to}</p>
-                  <p className="text-sm text-slate-900 font-mono">{truncateAddress(toAddress)}</p>
-                </div>
-                <button
-                  onClick={() => handleCopy(toAddress, 'to')}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
-                >
-                  <Copy className="w-4 h-4 text-slate-400" />
-                </button>
-              </div>
-              {copiedField === 'to' && (
-                <motion.p
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-xs text-[#00C2A8] mt-1"
-                >
-                  {t.copied}
-                </motion.p>
-              )}
-            </Card>
-
-            {/* Transaction ID */}
-            <Card className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex-1">
-                  <p className="text-xs text-slate-500 mb-1">{t.txid}</p>
-                  <p className="text-sm text-slate-900 font-mono break-all">{truncateAddress(txId)}</p>
-                </div>
-                <button
-                  onClick={() => handleCopy(txId, 'txid')}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
-                >
-                  <Copy className="w-4 h-4 text-slate-400" />
-                </button>
-              </div>
-              {copiedField === 'txid' && (
-                <motion.p
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-xs text-[#00C2A8] mb-2"
-                >
-                  {t.copied}
-                </motion.p>
-              )}
-              <button className="w-full flex items-center justify-center gap-2 text-xs text-[#00C2A8] hover:text-[#00A890] transition-colors py-2">
-                <ExternalLink className="w-3 h-3" />
-                {t.viewOnExplorer}
-              </button>
-            </Card>
-          </motion.div>
-        ) : (
-          /* Yen Payment Receipt Details */
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="w-full space-y-4 mb-6"
-          >
-            {/* Store & Payment Info */}
+          {/* Order Items */}
+          {cartItems.length > 0 && (
             <Card className="bg-white border border-slate-200 rounded-2xl p-5">
+              <h3 className="text-sm text-slate-900 mb-4">{t.orderDetails}</h3>
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-[#00C2A8] mt-0.5" />
-                  <div>
-                    <p className="text-sm text-slate-900">{t.storeName}</p>
-                    <p className="text-xs text-slate-500">{t.storeLocation}</p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-[#00C2A8] mt-0.5" />
-                  <div>
-                    <p className="text-xs text-slate-500">{t.paymentTime}</p>
-                    <p className="text-sm text-slate-900">{currentTime}</p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-start gap-3">
-                  <FileText className="w-5 h-5 text-[#00C2A8] mt-0.5" />
-                  <div>
-                    <p className="text-xs text-slate-500">{t.paymentMethod}</p>
-                    <p className="text-sm text-slate-900">{paymentMethodName}</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Order Items */}
-            {cartItems.length > 0 && (
-              <Card className="bg-white border border-slate-200 rounded-2xl p-5">
-                <h3 className="text-sm text-slate-900 mb-4">{t.orderDetails}</h3>
-                <div className="space-y-3">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-sm text-slate-900">
-                          {language === 'ja' ? item.nameJa : item.name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {t.qty}: {item.quantity}
-                        </p>
-                      </div>
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex gap-3 items-start">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
                       <p className="text-sm text-slate-900">
-                        ¥{(item.price * item.quantity).toLocaleString()}
+                        {language === 'ja' ? item.nameJa : item.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {t.qty}: {item.quantity} × ¥{item.price.toLocaleString()}
                       </p>
                     </div>
-                  ))}
-                  
-                  <Separator className="my-3" />
-                  
-                  {/* Subtotal */}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">{t.subtotal}</span>
-                    <span className="text-slate-900">¥{subtotal.toLocaleString()}</span>
+                    <p className="text-sm text-slate-900 flex-shrink-0">
+                      ¥{(item.price * item.quantity).toLocaleString()}
+                    </p>
                   </div>
-                  
-                  {/* Tax */}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">{t.tax}</span>
-                    <span className="text-slate-900">¥{tax.toLocaleString()}</span>
-                  </div>
-                  
-                  <Separator className="my-3" />
-                  
-                  {/* Total */}
-                  <div className="flex justify-between">
-                    <span className="text-slate-900">{t.total}</span>
-                    <span className="text-xl text-slate-900">¥{totalAmount.toLocaleString()}</span>
-                  </div>
+                ))}
+                
+                <Separator className="my-3" />
+                
+                {/* Subtotal */}
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">{t.subtotal}</span>
+                  <span className="text-slate-900">¥{subtotal.toLocaleString()}</span>
                 </div>
-              </Card>
-            )}
+                
+                {/* Tax */}
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">{t.tax}</span>
+                  <span className="text-slate-900">¥{tax.toLocaleString()}</span>
+                </div>
+                
+                <Separator className="my-3" />
+                
+                {/* Total */}
+                <div className="flex justify-between">
+                  <span className="text-slate-900">{t.total}</span>
+                  <span className="text-xl text-slate-900">¥{totalAmount.toLocaleString()}</span>
+                </div>
+              </div>
+            </Card>
+          )}
 
-            {/* View Receipt Button */}
-            <Button 
-              variant="outline"
-              className="w-full h-12 rounded-xl border-2 border-[#00C2A8] text-[#00C2A8] hover:bg-[#00C2A8]/5 active:scale-95 transition-all"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              {t.receipt}
-            </Button>
-          </motion.div>
-        )}
+          {/* View Receipt Button */}
+          <Button 
+            variant="outline"
+            className="w-full h-12 rounded-xl border-2 border-[#00C2A8] text-[#00C2A8] hover:bg-[#00C2A8]/5 active:scale-95 transition-all"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            {t.receipt}
+          </Button>
+        </motion.div>
       </div>
 
       {/* Complete Button */}
