@@ -5,6 +5,12 @@ export interface MenuItem {
   price: number;
   image: string;
   category: 'menu' | 'specials' | 'drinks';
+  description?: string;
+  descriptionJa?: string;
+  rating?: number;
+  isPopular?: boolean;
+  isNew?: boolean;
+  isSpicy?: boolean;
 }
 
 export interface CartItem extends MenuItem {

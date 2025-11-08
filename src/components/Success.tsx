@@ -42,6 +42,7 @@ export function Success({ language, onNewPayment, currency, paymentChannel, yenM
   };
 
   const isCryptoPayment = !!currency;
+  const isOnChainPayment = paymentChannel === 'walletconnect' || paymentChannel === 'metamask' || paymentChannel === 'onchain';
   const cryptoAmount = currency === 'USDC' 
     ? (totalAmount / 151).toFixed(2) 
     : totalAmount.toLocaleString();
@@ -224,7 +225,7 @@ export function Success({ language, onNewPayment, currency, paymentChannel, yenM
           <p className="text-sm text-slate-400">{t.paid}</p>
         </motion.div>
 
-        {/* Order Receipt Details - Now for ALL payment methods */}
+        {/* Order Receipt Details - For ALL payments */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -314,6 +315,96 @@ export function Success({ language, onNewPayment, currency, paymentChannel, yenM
                 </div>
               </div>
             </Card>
+          )}
+
+          {/* On-chain Transaction Details - ONLY for MetaMask/WalletConnect */}
+          {isOnChainPayment && (
+            <>
+              <div className="pt-2">
+                <h3 className="text-sm text-slate-600 mb-3">
+                  {language === 'en' ? 'Transaction Details' : language === 'ja' ? 'トランザクション詳細' : '交易详情'}
+                </h3>
+              </div>
+
+              {/* From Address */}
+              <Card className="bg-white border border-slate-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 mb-1">{t.from}</p>
+                    <p className="text-sm text-slate-900 font-mono">{truncateAddress(fromAddress)}</p>
+                  </div>
+                  <button
+                    onClick={() => handleCopy(fromAddress, 'from')}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
+                  >
+                    <Copy className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+                {copiedField === 'from' && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-[#00C2A8] mt-1"
+                  >
+                    {t.copied}
+                  </motion.p>
+                )}
+              </Card>
+
+              {/* To Address */}
+              <Card className="bg-white border border-slate-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 mb-1">{t.to}</p>
+                    <p className="text-sm text-slate-900 font-mono">{truncateAddress(toAddress)}</p>
+                  </div>
+                  <button
+                    onClick={() => handleCopy(toAddress, 'to')}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
+                  >
+                    <Copy className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+                {copiedField === 'to' && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-[#00C2A8] mt-1"
+                  >
+                    {t.copied}
+                  </motion.p>
+                )}
+              </Card>
+
+              {/* Transaction ID */}
+              <Card className="bg-white border border-slate-200 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 mb-1">{t.txid}</p>
+                    <p className="text-sm text-slate-900 font-mono break-all">{truncateAddress(txId)}</p>
+                  </div>
+                  <button
+                    onClick={() => handleCopy(txId, 'txid')}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
+                  >
+                    <Copy className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+                {copiedField === 'txid' && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-[#00C2A8] mb-2"
+                  >
+                    {t.copied}
+                  </motion.p>
+                )}
+                <button className="w-full flex items-center justify-center gap-2 text-xs text-[#00C2A8] hover:text-[#00A890] transition-colors py-2">
+                  <ExternalLink className="w-3 h-3" />
+                  {t.viewOnExplorer}
+                </button>
+              </Card>
+            </>
           )}
 
           {/* View Receipt Button */}
