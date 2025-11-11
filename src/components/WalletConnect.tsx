@@ -182,8 +182,13 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
 
   const metaMaskDeepLink = useMemo(() => {
     if (typeof window === 'undefined') return null;
-    const currentUrl = `${window.location.origin}${window.location.pathname}`;
-    return `https://metamask.app.link/dapp/${encodeURIComponent(currentUrl)}`;
+    try {
+      const url = new URL(window.location.href);
+      const domainAndPath = `${url.host}${url.pathname}${url.search}${url.hash}`.replace(/^\/+/, '');
+      return `https://metamask.app.link/dapp/${domainAndPath}`;
+    } catch {
+      return null;
+    }
   }, []);
 
   const isMetaMaskSelected = selectedWallet === 'metamask';
