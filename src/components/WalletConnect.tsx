@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
@@ -6,10 +6,10 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import type { Currency, Network } from '../types/order';
 
-const POLYGON_TESTNET_CHAIN_ID = 80001;
-const POLYGON_TESTNET_HEX_CHAIN_ID = '0x13881';
-const POLYGON_TESTNET_NAME = 'Polygon Mumbai Testnet';
-const POLYGON_TESTNET_EXPLORER = 'https://mumbai.polygonscan.com';
+const POLYGON_TESTNET_CHAIN_ID = 80002;
+const POLYGON_TESTNET_HEX_CHAIN_ID = '0x13882';
+const POLYGON_TESTNET_NAME = 'Polygon Amoy Testnet';
+const POLYGON_TESTNET_EXPLORER = 'https://amoy.polygonscan.com';
 const USDC_METHOD_TRANSFER = '0xa9059cbb';
 const USDC_DECIMALS = 6;
 const MAX_CONFIRMATION_ATTEMPTS = 30;
@@ -168,16 +168,19 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
     { id: 'metamask', name: 'MetaMask', color: 'from-orange-500 to-orange-600' }
   ];
 
-  const env = (import.meta as any)?.env ?? {};
-
   const polygonTestnetHexChainId = POLYGON_TESTNET_HEX_CHAIN_ID;
-  const merchantAddress = env.VITE_MERCHANT_WALLET_ADDRESS as `0x${string}` | undefined;
-  const usdcContractAddress = env.VITE_POLYGON_USDC_CONTRACT as `0x${string}` | undefined;
-  const polygonPublicRpc = env.VITE_POLYGON_TESTNET_RPC ?? 'https://polygon-mumbai-bor.publicnode.com';
+  const merchantAddress = '0x3f0622f39a62a3d4886a5ed4e242cac9ed837101' as const;
+  const usdcContractAddress = '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0E7582' as const;
+  const polygonPublicRpc = 'https://rpc-amoy.polygon.technology';
 
   const isMobile = useMemo(() => {
     if (typeof navigator === 'undefined') return false;
     return /iPad|iPhone|Android/i.test(navigator.userAgent);
+  }, []);
+
+  const isMetaMaskMobileBrowser = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    return /MetaMaskMobile/i.test(navigator.userAgent);
   }, []);
 
   const metaMaskDeepLink = useMemo(() => {
@@ -192,8 +195,30 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
   }, []);
 
   const isMetaMaskSelected = selectedWallet === 'metamask';
-  const ethereum = typeof window !== 'undefined' ? (window as any).ethereum : undefined;
+  const [ethereum, setEthereum] = useState<any>(
+    typeof window !== 'undefined' ? (window as any).ethereum : undefined,
+  );
   const isMetaMaskAvailable = Boolean(ethereum?.isMetaMask);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleEthereumReady = () => {
+      setEthereum((window as any).ethereum);
+    };
+
+    if ((window as any).ethereum) {
+      handleEthereumReady();
+    } else {
+      window.addEventListener('ethereum#initialized', handleEthereumReady, { once: true });
+      const timeout = window.setTimeout(handleEthereumReady, 2000);
+      return () => {
+        window.removeEventListener('ethereum#initialized', handleEthereumReady as any);
+        window.clearTimeout(timeout);
+      };
+    }
+
+    return () => undefined;
+  }, []);
 
   const resetTransactionState = () => {
     setAccount(null);
@@ -260,6 +285,10 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
     if (!isMetaMaskSelected) return;
 
     if (!ethereum) {
+      if ((isMetaMaskMobileBrowser || isMetaMaskSelected) && !isMetaMaskAvailable) {
+        setErrorMessage(t.metaMaskNotFound);
+        return;
+      }
       if (isMobile && metaMaskDeepLink) {
         window.open(metaMaskDeepLink, '_self');
         return;
