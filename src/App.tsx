@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useMemo } from 'react';
 import { Menu } from './components/Menu';
 import { OrderReview } from './components/OrderReview';
 import { PaymentHub } from './components/PaymentHub';
@@ -13,6 +14,7 @@ import { Success } from './components/Success';
 import { Failed } from './components/Failed';
 import { LanguageSheet } from './components/LanguageSheet';
 import type { CartItem, Currency, Network, PaymentChannel, YenPaymentMethod } from './types/order';
+import { CheckoutDemo } from './components/CheckoutDemo';
 
 export type Screen = 
   | 'menu'
@@ -31,6 +33,18 @@ export type Screen =
 export type ExchangeName = 'Binance' | 'OKX' | 'Bybit' | 'Coinbase';
 
 export default function App() {
+  const isStandaloneCheckout = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    const path = window.location.pathname.toLowerCase();
+    return path.startsWith('/checkout') || path.startsWith('/demo-checkout');
+  }, []);
+
+  if (isStandaloneCheckout) {
+    return <CheckoutDemo />;
+  }
+
   const [currentScreen, setCurrentScreen] = useState<Screen>('menu');
   const [language, setLanguage] = useState<'en' | 'ja' | 'zh'>('en');
   const [displayCurrency, setDisplayCurrency] = useState<'JPY' | 'USD'>('JPY');

@@ -187,12 +187,20 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
     if (typeof window === 'undefined') return null;
     try {
       const url = new URL(window.location.href);
-      const domainAndPath = `${url.host}${url.pathname}${url.search}${url.hash}`.replace(/^\/+/, '');
+      const searchParams = new URLSearchParams(window.location.search);
+      const orderId = searchParams.get('orderId') ?? 'DEMO-ORDER-001';
+      const query = new URLSearchParams({
+        orderId,
+        amount: totalAmount.toString(),
+        lang: language,
+        displayCurrency: currency === 'USDC' ? 'JPY' : currency,
+      }).toString();
+      const domainAndPath = `${url.host}/checkout-demo?${query}`;
       return `https://metamask.app.link/dapp/${domainAndPath}`;
     } catch {
       return null;
     }
-  }, []);
+  }, [currency, language, totalAmount]);
 
   const isMetaMaskSelected = selectedWallet === 'metamask';
   const [ethereum, setEthereum] = useState<any>(
