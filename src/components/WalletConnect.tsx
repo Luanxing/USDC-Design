@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
@@ -37,9 +37,20 @@ interface WalletConnectProps {
   currency: Currency;
   network: Network;
   totalAmount: number;
+  defaultWalletId?: string;
+  autoConnectAndPay?: boolean;
 }
 
-export function WalletConnect({ onConfirm, onBack, language, currency, network, totalAmount }: WalletConnectProps) {
+export function WalletConnect({
+  onConfirm,
+  onBack,
+  language,
+  currency,
+  network,
+  totalAmount,
+  defaultWalletId,
+  autoConnectAndPay,
+}: WalletConnectProps) {
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const [showTransaction, setShowTransaction] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
@@ -49,6 +60,7 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [transactionConfirmed, setTransactionConfirmed] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const autoInitiatedRef = useRef(false);
 
   const text = {
     en: {
@@ -229,6 +241,7 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
   }, []);
 
   const resetTransactionState = () => {
+    autoInitiatedRef.current = false;
     setAccount(null);
     setNetworkReady(false);
     setTransactionHash(null);
@@ -236,6 +249,13 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
     setErrorMessage(null);
     setIsSubmitting(false);
   };
+
+  useEffect(() => {
+    if (!defaultWalletId) return;
+    if (selectedWallet === defaultWalletId && showTransaction) return;
+    setSelectedWallet(defaultWalletId);
+    setShowTransaction(true);
+  }, [defaultWalletId, selectedWallet, showTransaction]);
 
   const handleWalletSelect = (walletId: string) => {
     resetTransactionState();
@@ -289,33 +309,35 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
     setNetworkReady(true);
   };
 
-  const connectMetaMask = async () => {
-    if (!isMetaMaskSelected) return;
+  const connectMetaMask = async (): Promise<boolean> => {
+    if (!isMetaMaskSelected) return false;
 
     if (!ethereum) {
       if ((isMetaMaskMobileBrowser || isMetaMaskSelected) && !isMetaMaskAvailable) {
         setErrorMessage(t.metaMaskNotFound);
-        return;
+        return false;
       }
       if (isMobile && metaMaskDeepLink) {
         window.open(metaMaskDeepLink, '_self');
-        return;
+        return false;
       }
       setErrorMessage(t.metaMaskNotFound);
-      return;
+      return false;
     }
 
     try {
       setIsConnecting(true);
       setErrorMessage(null);
-    const accounts: string[] = await ethereum.request({ method: 'eth_requestAccounts' });
+      const accounts: string[] = await ethereum.request({ method: 'eth_requestAccounts' });
       if (!accounts?.length) {
         throw new Error('No account returned from MetaMask.');
       }
       setAccount(accounts[0]);
       await ensurePolygonTestnet();
+      return true;
     } catch (error: any) {
       setErrorMessage(error?.message ?? t.metaMaskNotFound);
+      return false;
     } finally {
       setIsConnecting(false);
     }
@@ -398,6 +420,22 @@ export function WalletConnect({ onConfirm, onBack, language, currency, network, 
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!autoConnectAndPay) return;
+    if (!isMetaMaskSelected) return;
+    if (autoInitiatedRef.current) return;
+
+    autoInitiatedRef.current = true;
+    (async () => {
+      const connected = await connectMetaMask();
+      if (!connected) {
+        autoInitiatedRef.current = false;
+        return;
+      }
+      await handleSubmitPayment();
+    })();
+  }, [autoConnectAndPay, isMetaMaskSelected]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F9FB]">

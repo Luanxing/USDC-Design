@@ -102,6 +102,8 @@ export function CheckoutDemo({ defaultCurrency = 'USDC', defaultNetwork = 'Polyg
         currency={defaultCurrency}
         network={defaultNetwork}
         totalAmount={totalAmount}
+        defaultWalletId="metamask"
+        autoConnectAndPay
       />
     );
   }
