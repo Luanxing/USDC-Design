@@ -157,8 +157,24 @@ export function WalletConnect({
 
   const t = text[language];
 
+  // 固定测试金额：默认 0.01 USDC，可用 ?usdc= 覆盖
+  const searchParams = useMemo(() => {
+    if (typeof window === 'undefined') return new URLSearchParams();
+    return new URLSearchParams(window.location.search);
+  }, []);
+  const forcedTestUsdc = useMemo(() => {
+    try {
+      const s = (searchParams.get('usdc') || '').trim();
+      const n = Number(s);
+      if (Number.isFinite(n) && n > 0) return n.toFixed(2);
+      return '0.01';
+    } catch {
+      return '0.01';
+    }
+  }, [searchParams]);
+
   const cryptoAmount = currency === 'USDC'
-    ? (totalAmount / 151).toFixed(2)
+    ? forcedTestUsdc
     : totalAmount.toLocaleString();
 
   const networkFees: Record<Network, string> = {
