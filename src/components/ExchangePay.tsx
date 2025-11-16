@@ -421,14 +421,73 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
         <div className="space-y-3 pt-4">
           <Button 
             onClick={() => {
-              // Try to open the exchange app
-              const appLinks: Record<string, string> = {
-                'Binance': 'binance://',
-                'OKX': 'okx://',
-                'Bybit': 'bybit://',
-                'Coinbase': 'coinbase://'
+              // Prefer deep link to app, with safe fallbacks
+              const ua = navigator.userAgent || '';
+              const isIOS = /iPad|iPhone|iPod/.test(ua);
+              const isAndroid = /Android/.test(ua);
+              
+              const amount = usdcAmount;
+              // Put helpful info to clipboard for quick paste inside the app
+              try {
+                const info = `Merchant ID: ${merchantId}\nAmount: ${amount} USDC`;
+                navigator.clipboard?.writeText?.(info);
+              } catch {}
+
+              // Construct candidates
+              let primaryLink = '';
+              let fallbackWeb = '';
+              let appStoreLink = '';
+
+              if (exchangeName === 'Binance') {
+                // Known deep link entry points
+                primaryLink = 'binance://pay';
+                fallbackWeb = 'https://www.binance.com/en/pay';
+                appStoreLink = isIOS
+                  ? 'https://apps.apple.com/app/binance-buy-bitcoin-crypto/id1436799971'
+                  : 'https://play.google.com/store/apps/details?id=com.binance.dev';
+              } else if (exchangeName === 'OKX') {
+                primaryLink = 'okx://wallet';
+                fallbackWeb = 'https://www.okx.com';
+                appStoreLink = isIOS
+                  ? 'https://apps.apple.com/app/okx-buy-bitcoin-eth-crypto/id1327268470'
+                  : 'https://play.google.com/store/apps/details?id=com.okinc.okex.gp';
+              } else if (exchangeName === 'Bybit') {
+                primaryLink = 'bybit://';
+                fallbackWeb = 'https://www.bybit.com';
+                appStoreLink = isIOS
+                  ? 'https://apps.apple.com/app/bybit-buy-btc-eth-crypto/id1467589068'
+                  : 'https://play.google.com/store/apps/details?id=com.bybit.app';
+              } else if (exchangeName === 'Coinbase') {
+                primaryLink = 'coinbase://';
+                fallbackWeb = 'https://www.coinbase.com';
+                appStoreLink = isIOS
+                  ? 'https://apps.apple.com/app/coinbase-buy-bitcoin-crypto/id886427730'
+                  : 'https://play.google.com/store/apps/details?id=com.coinbase.android';
+              }
+
+              const openUrl = (url: string) => {
+                window.location.href = url;
               };
-              window.location.href = appLinks[exchangeName] || 'binance://';
+
+              const timer = setTimeout(() => {
+                // If deep link didn't succeed, go to web as fallback
+                if (fallbackWeb) {
+                  window.location.href = fallbackWeb;
+                } else if (appStoreLink) {
+                  window.location.href = appStoreLink;
+                }
+              }, 1200);
+
+              try {
+                openUrl(primaryLink || fallbackWeb || appStoreLink);
+              } catch {
+                clearTimeout(timer);
+                if (fallbackWeb) {
+                  openUrl(fallbackWeb);
+                } else if (appStoreLink) {
+                  openUrl(appStoreLink);
+                }
+              }
             }}
             className="w-full h-14 rounded-2xl shadow-xl active:scale-95 transition-transform text-lg"
             style={{ 
