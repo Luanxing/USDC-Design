@@ -421,28 +421,13 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
         <div className="space-y-3 pt-4">
           <Button 
             onClick={() => {
-              // 仅使用 Binance 深链（无网页/商店回退），方便逐步调试
-              const ua = navigator.userAgent || '';
-              const isIOS = /iPad|iPhone|iPod/.test(ua);
-              const scheme = 'binance://';
-
-              // 复制信息，便于在 App 内粘贴
+              // 使用 Universal Link 直达 Binance 首页（iOS 将尝试唤起 App）
+              // 同时复制信息便于在 App 中粘贴
               try {
                 const info = `Merchant ID: ${merchantId}\nAmount: ${usdcAmount} USDC`;
                 navigator.clipboard?.writeText?.(info);
               } catch {}
-
-              if (isIOS) {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = scheme;
-                document.body.appendChild(iframe);
-                setTimeout(() => {
-                  document.body.removeChild(iframe);
-                }, 1200);
-              } else {
-                window.location.href = scheme;
-              }
+              window.location.href = 'https://www.binance.com/en/';
             }}
             className="w-full h-14 rounded-2xl shadow-xl active:scale-95 transition-transform text-lg"
             style={{ 
