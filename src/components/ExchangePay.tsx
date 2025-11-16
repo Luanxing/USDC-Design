@@ -421,161 +421,27 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
         <div className="space-y-3 pt-4">
           <Button 
             onClick={() => {
-              // Prefer deep link to app, with robust fallbacks and multiple schemes
+              // 仅使用 Binance 深链（无网页/商店回退），方便逐步调试
               const ua = navigator.userAgent || '';
               const isIOS = /iPad|iPhone|iPod/.test(ua);
-              const isAndroid = /Android/.test(ua);
-              const region = (() => {
-                try {
-                  const p = new URLSearchParams(window.location.search);
-                  const r = (p.get('bnRegion') || '').toLowerCase();
-                  if (r === 'zh' || r === 'me' || r === 'us' || r === 'global') return r;
-                  return 'global';
-                } catch {
-                  return 'global';
-                }
-              })();
-              const flags = (() => {
-                try {
-                  const p = new URLSearchParams(window.location.search);
-                  return {
-                    forceScheme: (p.get('bnForceScheme') || '').toLowerCase() === 'true',
-                    useWindowOpen: (p.get('bnUseWindowOpen') || '').toLowerCase() === 'true',
-                  };
-                } catch {
-                  return { forceScheme: false, useWindowOpen: false };
-                }
-              })();
+              const scheme = 'binance://';
 
-              const amount = usdcAmount;
-              // Put helpful info to clipboard for quick paste inside the app
+              // 复制信息，便于在 App 内粘贴
               try {
-                const info = `Merchant ID: ${merchantId}\nAmount: ${amount} USDC`;
+                const info = `Merchant ID: ${merchantId}\nAmount: ${usdcAmount} USDC`;
                 navigator.clipboard?.writeText?.(info);
               } catch {}
 
-              // Prepare candidates for Binance and others
-              let candidates: string[] = [];
-              let webFallback = '';
-              let storeUrl = '';
-
-              if (exchangeName === 'Binance') {
-                // Try multiple known entries
-                const regionCandidates: Record<string, string[]> = {
-                  // 以 download 页优先（该页通常内置“在 App 打开”逻辑），再到 en 首页、pay
-                  global: [
-                    'https://www.binance.com/en/download',
-                    'https://www.binance.com/en',
-                    'https://www.binance.com/en/pay'
-                  ],
-                  zh: [
-                    'https://www.binancezh.com/zh-CN/download',
-                    'https://www.binancezh.com/zh-CN/pay',
-                    'https://www.binance.com/zh-CN/pay'
-                  ],
-                  // ME 也优先 binance.com，再到 binance.me
-                  me: [
-                    'https://www.binance.com/en/download',
-                    'https://www.binance.com/en',
-                    'https://www.binance.com/en/pay',
-                    'https://www.binance.me/en',
-                    'https://www.binance.me/en/download',
-                    'https://www.binance.me/en/pay'
-                  ],
-                  us: ['https://www.binance.us'],
-                };
-                const universal = (regionCandidates[region] || regionCandidates.global);
-                const schemes = ['binance://pay', 'binance://'];
-                // 对 iOS：若明确要求强制用 scheme，或 ME 区域，优先尝试 scheme
-                const preferScheme = (isIOS && (flags.forceScheme || region === 'me'));
-                candidates = preferScheme
-                  ? [...schemes, ...universal]
-                  : [...universal, ...schemes];
-                // Android intent as an extra attempt
-                if (isAndroid) {
-                  candidates.push('intent://pay#Intent;scheme=binance;package=com.binance.dev;S.browser_fallback_url=https%3A%2F%2Fwww.binance.com%2Fen%2Fpay;end');
-                }
-                webFallback = (regionCandidates[region] || regionCandidates.global)[0];
-                storeUrl = isIOS
-                  ? 'https://apps.apple.com/app/binance-buy-bitcoin-crypto/id1436799971'
-                  : 'https://play.google.com/store/apps/details?id=com.binance.dev';
-              } else if (exchangeName === 'OKX') {
-                candidates = ['https://www.okx.com', 'okx://wallet'];
-                webFallback = 'https://www.okx.com';
-                storeUrl = isIOS
-                  ? 'https://apps.apple.com/app/okx-buy-bitcoin-eth-crypto/id1327268470'
-                  : 'https://play.google.com/store/apps/details?id=com.okinc.okex.gp';
-              } else if (exchangeName === 'Bybit') {
-                candidates = ['https://www.bybit.com', 'bybit://'];
-                webFallback = 'https://www.bybit.com';
-                storeUrl = isIOS
-                  ? 'https://apps.apple.com/app/bybit-buy-btc-eth-crypto/id1467589068'
-                  : 'https://play.google.com/store/apps/details?id=com.bybit.app';
-              } else if (exchangeName === 'Coinbase') {
-                candidates = ['https://www.coinbase.com', 'coinbase://'];
-                webFallback = 'https://www.coinbase.com';
-                storeUrl = isIOS
-                  ? 'https://apps.apple.com/app/coinbase-buy-bitcoin-crypto/id886427730'
-                  : 'https://play.google.com/store/apps/details?id=com.coinbase.android';
-              }
-
-              const openViaIFrame = (url: string) => {
+              if (isIOS) {
                 const iframe = document.createElement('iframe');
                 iframe.style.display = 'none';
-                iframe.src = url;
+                iframe.src = scheme;
                 document.body.appendChild(iframe);
                 setTimeout(() => {
                   document.body.removeChild(iframe);
-                }, 1500);
-              };
-
-              let didAttempt = false;
-              const tryOpen = (url: string) => {
-                didAttempt = true;
-                if (isIOS && url.startsWith('binance://')) {
-                  // iOS often needs iframe for custom schemes
-                  openViaIFrame(url);
-                } else {
-                  if (flags.useWindowOpen) {
-                    window.open(url, '_self');
-                  } else {
-                    window.location.href = url;
-                  }
-                }
-              };
-
-              // Fallback timer: if none of the attempts worked, go to web or store
-              const fallbackTimer = setTimeout(() => {
-                if (!didAttempt) return;
-                if (webFallback) {
-                  window.location.href = webFallback;
-                } else if (storeUrl) {
-                  window.location.href = storeUrl;
-                }
-              }, 1600);
-
-              // Sequentially try candidates; first one is universal link usually safe
-              try {
-                if (candidates.length > 0) {
-                  tryOpen(candidates[0]);
-                  // Fire a second attempt shortly after to try scheme if first was ignored
-                  if (candidates[1]) {
-                    setTimeout(() => {
-                      tryOpen(candidates[1]);
-                    }, 300);
-                  }
-                } else if (webFallback) {
-                  window.location.href = webFallback;
-                } else if (storeUrl) {
-                  window.location.href = storeUrl;
-                }
-              } catch {
-                clearTimeout(fallbackTimer);
-                if (webFallback) {
-                  window.location.href = webFallback;
-                } else if (storeUrl) {
-                  window.location.href = storeUrl;
-                }
+                }, 1200);
+              } else {
+                window.location.href = scheme;
               }
             }}
             className="w-full h-14 rounded-2xl shadow-xl active:scale-95 transition-transform text-lg"
