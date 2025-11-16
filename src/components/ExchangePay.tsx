@@ -435,6 +435,17 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
                   return 'global';
                 }
               })();
+              const flags = (() => {
+                try {
+                  const p = new URLSearchParams(window.location.search);
+                  return {
+                    forceScheme: (p.get('bnForceScheme') || '').toLowerCase() === 'true',
+                    useWindowOpen: (p.get('bnUseWindowOpen') || '').toLowerCase() === 'true',
+                  };
+                } catch {
+                  return { forceScheme: false, useWindowOpen: false };
+                }
+              })();
 
               const amount = usdcAmount;
               // Put helpful info to clipboard for quick paste inside the app
@@ -451,11 +462,20 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
               if (exchangeName === 'Binance') {
                 // Try multiple known entries
                 const regionCandidates: Record<string, string[]> = {
-                  // 以 binance.com 为主域优先尝试
-                  global: ['https://www.binance.com/en', 'https://www.binance.com/en/pay'],
-                  zh: ['https://www.binancezh.com/zh-CN/pay', 'https://www.binance.com/zh-CN/pay'],
-                  // ME 也优先尝试 binance.com，其次再尝试 binance.me
+                  // 以 download 页优先（该页通常内置“在 App 打开”逻辑），再到 en 首页、pay
+                  global: [
+                    'https://www.binance.com/en/download',
+                    'https://www.binance.com/en',
+                    'https://www.binance.com/en/pay'
+                  ],
+                  zh: [
+                    'https://www.binancezh.com/zh-CN/download',
+                    'https://www.binancezh.com/zh-CN/pay',
+                    'https://www.binance.com/zh-CN/pay'
+                  ],
+                  // ME 也优先 binance.com，再到 binance.me
                   me: [
+                    'https://www.binance.com/en/download',
                     'https://www.binance.com/en',
                     'https://www.binance.com/en/pay',
                     'https://www.binance.me/en',
@@ -466,8 +486,9 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
                 };
                 const universal = (regionCandidates[region] || regionCandidates.global);
                 const schemes = ['binance://pay', 'binance://'];
-                // For iOS + ME region, prioritize schemes first to avoid App Store bounce
-                candidates = (isIOS && region === 'me')
+                // 对 iOS：若明确要求强制用 scheme，或 ME 区域，优先尝试 scheme
+                const preferScheme = (isIOS && (flags.forceScheme || region === 'me'));
+                candidates = preferScheme
                   ? [...schemes, ...universal]
                   : [...universal, ...schemes];
                 // Android intent as an extra attempt
@@ -515,7 +536,11 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
                   // iOS often needs iframe for custom schemes
                   openViaIFrame(url);
                 } else {
-                  window.location.href = url;
+                  if (flags.useWindowOpen) {
+                    window.open(url, '_self');
+                  } else {
+                    window.location.href = url;
+                  }
                 }
               };
 
