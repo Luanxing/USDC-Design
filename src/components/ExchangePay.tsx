@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Copy, Check, ExternalLink, ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
@@ -421,11 +421,11 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
         <div className="space-y-3 pt-4">
           <Button 
             onClick={() => {
-              // Prefer deep link to app, with safe fallbacks
+              // Prefer deep link to app, with robust fallbacks and multiple schemes
               const ua = navigator.userAgent || '';
               const isIOS = /iPad|iPhone|iPod/.test(ua);
               const isAndroid = /Android/.test(ua);
-              
+
               const amount = usdcAmount;
               // Put helpful info to clipboard for quick paste inside the app
               try {
@@ -433,59 +433,100 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
                 navigator.clipboard?.writeText?.(info);
               } catch {}
 
-              // Construct candidates
-              let primaryLink = '';
-              let fallbackWeb = '';
-              let appStoreLink = '';
+              // Prepare candidates for Binance and others
+              let candidates: string[] = [];
+              let webFallback = '';
+              let storeUrl = '';
 
               if (exchangeName === 'Binance') {
-                // Known deep link entry points
-                primaryLink = 'binance://pay';
-                fallbackWeb = 'https://www.binance.com/en/pay';
-                appStoreLink = isIOS
+                // Try multiple known entries
+                candidates = [
+                  // Universal link first (may open the app if supported)
+                  'https://www.binance.com/en/pay',
+                  // App scheme (iOS/Android)
+                  'binance://pay',
+                  'binance://',
+                ];
+                // Android intent as an extra attempt
+                if (isAndroid) {
+                  candidates.push('intent://pay#Intent;scheme=binance;package=com.binance.dev;S.browser_fallback_url=https%3A%2F%2Fwww.binance.com%2Fen%2Fpay;end');
+                }
+                webFallback = 'https://www.binance.com/en/pay';
+                storeUrl = isIOS
                   ? 'https://apps.apple.com/app/binance-buy-bitcoin-crypto/id1436799971'
                   : 'https://play.google.com/store/apps/details?id=com.binance.dev';
               } else if (exchangeName === 'OKX') {
-                primaryLink = 'okx://wallet';
-                fallbackWeb = 'https://www.okx.com';
-                appStoreLink = isIOS
+                candidates = ['https://www.okx.com', 'okx://wallet'];
+                webFallback = 'https://www.okx.com';
+                storeUrl = isIOS
                   ? 'https://apps.apple.com/app/okx-buy-bitcoin-eth-crypto/id1327268470'
                   : 'https://play.google.com/store/apps/details?id=com.okinc.okex.gp';
               } else if (exchangeName === 'Bybit') {
-                primaryLink = 'bybit://';
-                fallbackWeb = 'https://www.bybit.com';
-                appStoreLink = isIOS
+                candidates = ['https://www.bybit.com', 'bybit://'];
+                webFallback = 'https://www.bybit.com';
+                storeUrl = isIOS
                   ? 'https://apps.apple.com/app/bybit-buy-btc-eth-crypto/id1467589068'
                   : 'https://play.google.com/store/apps/details?id=com.bybit.app';
               } else if (exchangeName === 'Coinbase') {
-                primaryLink = 'coinbase://';
-                fallbackWeb = 'https://www.coinbase.com';
-                appStoreLink = isIOS
+                candidates = ['https://www.coinbase.com', 'coinbase://'];
+                webFallback = 'https://www.coinbase.com';
+                storeUrl = isIOS
                   ? 'https://apps.apple.com/app/coinbase-buy-bitcoin-crypto/id886427730'
                   : 'https://play.google.com/store/apps/details?id=com.coinbase.android';
               }
 
-              const openUrl = (url: string) => {
-                window.location.href = url;
+              const openViaIFrame = (url: string) => {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = url;
+                document.body.appendChild(iframe);
+                setTimeout(() => {
+                  document.body.removeChild(iframe);
+                }, 1500);
               };
 
-              const timer = setTimeout(() => {
-                // If deep link didn't succeed, go to web as fallback
-                if (fallbackWeb) {
-                  window.location.href = fallbackWeb;
-                } else if (appStoreLink) {
-                  window.location.href = appStoreLink;
+              let didAttempt = false;
+              const tryOpen = (url: string) => {
+                didAttempt = true;
+                if (isIOS && url.startsWith('binance://')) {
+                  // iOS often needs iframe for custom schemes
+                  openViaIFrame(url);
+                } else {
+                  window.location.href = url;
                 }
-              }, 1200);
+              };
 
+              // Fallback timer: if none of the attempts worked, go to web or store
+              const fallbackTimer = setTimeout(() => {
+                if (!didAttempt) return;
+                if (webFallback) {
+                  window.location.href = webFallback;
+                } else if (storeUrl) {
+                  window.location.href = storeUrl;
+                }
+              }, 1600);
+
+              // Sequentially try candidates; first one is universal link usually safe
               try {
-                openUrl(primaryLink || fallbackWeb || appStoreLink);
+                if (candidates.length > 0) {
+                  tryOpen(candidates[0]);
+                  // Fire a second attempt shortly after to try scheme if first was ignored
+                  if (candidates[1]) {
+                    setTimeout(() => {
+                      tryOpen(candidates[1]);
+                    }, 300);
+                  }
+                } else if (webFallback) {
+                  window.location.href = webFallback;
+                } else if (storeUrl) {
+                  window.location.href = storeUrl;
+                }
               } catch {
-                clearTimeout(timer);
-                if (fallbackWeb) {
-                  openUrl(fallbackWeb);
-                } else if (appStoreLink) {
-                  openUrl(appStoreLink);
+                clearTimeout(fallbackTimer);
+                if (webFallback) {
+                  window.location.href = webFallback;
+                } else if (storeUrl) {
+                  window.location.href = storeUrl;
                 }
               }
             }}
