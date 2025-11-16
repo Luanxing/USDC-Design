@@ -451,9 +451,17 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
               if (exchangeName === 'Binance') {
                 // Try multiple known entries
                 const regionCandidates: Record<string, string[]> = {
-                  global: ['https://www.binance.com/en/pay', 'https://www.binance.com/en'],
+                  // 以 binance.com 为主域优先尝试
+                  global: ['https://www.binance.com/en', 'https://www.binance.com/en/pay'],
                   zh: ['https://www.binancezh.com/zh-CN/pay', 'https://www.binance.com/zh-CN/pay'],
-                  me: ['https://www.binance.me/en/pay', 'https://www.binance.me/en'],
+                  // ME 也优先尝试 binance.com，其次再尝试 binance.me
+                  me: [
+                    'https://www.binance.com/en',
+                    'https://www.binance.com/en/pay',
+                    'https://www.binance.me/en',
+                    'https://www.binance.me/en/download',
+                    'https://www.binance.me/en/pay'
+                  ],
                   us: ['https://www.binance.us'],
                 };
                 const universal = (regionCandidates[region] || regionCandidates.global);
