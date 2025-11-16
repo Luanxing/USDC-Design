@@ -425,6 +425,16 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
               const ua = navigator.userAgent || '';
               const isIOS = /iPad|iPhone|iPod/.test(ua);
               const isAndroid = /Android/.test(ua);
+              const region = (() => {
+                try {
+                  const p = new URLSearchParams(window.location.search);
+                  const r = (p.get('bnRegion') || '').toLowerCase();
+                  if (r === 'zh' || r === 'me' || r === 'us' || r === 'global') return r;
+                  return 'global';
+                } catch {
+                  return 'global';
+                }
+              })();
 
               const amount = usdcAmount;
               // Put helpful info to clipboard for quick paste inside the app
@@ -440,18 +450,23 @@ export function ExchangePay({ exchangeName, merchantId, onSuccess, onBack, langu
 
               if (exchangeName === 'Binance') {
                 // Try multiple known entries
-                candidates = [
-                  // Universal link first (may open the app if supported)
-                  'https://www.binance.com/en/pay',
-                  // App scheme (iOS/Android)
-                  'binance://pay',
-                  'binance://',
-                ];
+                const regionCandidates: Record<string, string[]> = {
+                  global: ['https://www.binance.com/en/pay', 'https://www.binance.com/en'],
+                  zh: ['https://www.binancezh.com/zh-CN/pay', 'https://www.binance.com/zh-CN/pay'],
+                  me: ['https://www.binance.me/en/pay', 'https://www.binance.me/en'],
+                  us: ['https://www.binance.us'],
+                };
+                const universal = (regionCandidates[region] || regionCandidates.global);
+                const schemes = ['binance://pay', 'binance://'];
+                // For iOS + ME region, prioritize schemes first to avoid App Store bounce
+                candidates = (isIOS && region === 'me')
+                  ? [...schemes, ...universal]
+                  : [...universal, ...schemes];
                 // Android intent as an extra attempt
                 if (isAndroid) {
                   candidates.push('intent://pay#Intent;scheme=binance;package=com.binance.dev;S.browser_fallback_url=https%3A%2F%2Fwww.binance.com%2Fen%2Fpay;end');
                 }
-                webFallback = 'https://www.binance.com/en/pay';
+                webFallback = (regionCandidates[region] || regionCandidates.global)[0];
                 storeUrl = isIOS
                   ? 'https://apps.apple.com/app/binance-buy-bitcoin-crypto/id1436799971'
                   : 'https://play.google.com/store/apps/details?id=com.binance.dev';
